@@ -1,0 +1,25 @@
+
+.lessonbank_search_form {
+    background-color: #b3b3b3;
+    padding: 10px;
+}
+
+.lessonbank_search_form .showadvanced,
+.lessonbank_search_form .showadvanced:hover,
+.lessonbank_search_form .showadvanced:focus,
+.lessonbank_search_form .showadvanced:active {
+    background: none;
+    border: none;
+    color: black;
+}
+
+.lessonbank_search_form [id^="fitem_id_search"] .col-md-3,
+.lessonbank_search_form [id^="fitem_id_submit"] .col-md-3 {
+    display: none !important;
+}
+
+.searchbox .itemcontainer {
+    padding: 10px;
+    margin: 10px;
+    border: 1px solid black;
+}
