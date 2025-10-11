@@ -1,0 +1,38 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Version information for Lessonbank
+ *
+ * @package    local_lessonbank
+ * @copyright  2025 YOUR NAME <your@email.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die();
+
+$plugin->component    = 'local_lessonbank';
+$plugin->release      = '1.0';
+$plugin->version      = 2025100600.02;
+$plugin->requires     = 2025092600.00;
+$plugin->supported    = [501, 501];
+$plugin->maturity     = MATURITY_STABLE;
+$plugin->dependencies = [
+    'mod_minilesson' => ANY_VERSION,
+    'local_modcustomfields' => ANY_VERSION,
+    'customfield_multiselect' => ANY_VERSION,
+    'customfield_picture' => ANY_VERSION,
+];
