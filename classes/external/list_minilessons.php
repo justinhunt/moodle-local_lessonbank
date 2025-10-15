@@ -45,7 +45,9 @@ class list_minilessons extends external_api {
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'language' => new external_value(PARAM_RAW, 'Language', VALUE_DEFAULT),
-            'level' => new external_value(PARAM_RAW, 'Level', VALUE_DEFAULT),
+            'level' => new external_multiple_structure(
+                new external_value(PARAM_RAW, 'level', VALUE_DEFAULT),
+            'Level', VALUE_DEFAULT, []),
             'keywords' => new external_value(PARAM_RAW, 'Key words', VALUE_DEFAULT),
         ]);
     }
@@ -62,7 +64,7 @@ class list_minilessons extends external_api {
         // Parameter validation.
         [
             'language' => $language,
-            'level' => $level,
+            'level' => $levels,
             'keywords' => $keywords,
         ] = self::validate_parameters(
             self::execute_parameters(),
@@ -143,18 +145,26 @@ class list_minilessons extends external_api {
 
                         // Filters
                         if ($fieldshortname === $allfieldshorts[3]) {
-                            if (!empty($level) && !is_numeric($level) && $field->get('type') === 'select') {
+                            $levelvalues = [];
+                            if (!empty($levels) && $field->get('type') === 'select') {
                                 $fieldoptions = $field->get_options();
-                                if (in_array($level, $fieldoptions)) {
-                                    $level = array_search($level, $fieldoptions);
-                                } else {
-                                    $level = 0;
+                                foreach ($levels as $level) {
+                                    if (!is_numeric($level) && in_array($level, $fieldoptions)) {
+                                        $levelvalues[] = array_search($level, $fieldoptions);
+                                    } else {
+                                        $levelvalues[] =  $level;
+                                    }
                                 }
                             }
-
-                            if (!empty($level)) {
-                                $where .= " AND {$dbfield} = :langlevel ";
-                                $params['langlevel'] = $level;
+                            if (!empty($levelvalues)) {
+                                $where .= " AND (";
+                                $levelors = [];
+                                foreach ($levelvalues as $key => $level) {
+                                    $levelors[] = "{$dbfield} = :langlevel{$key}";
+                                    $params["langlevel{$key}"] = $level;
+                                }
+                                $where .= join(' OR ', $levelors);
+                                $where .= ")";
                             }
                         }
 
@@ -179,8 +189,8 @@ class list_minilessons extends external_api {
             $where .= " AND {$DB->sql_like('m.ttslanguage', ':langcode')} ";
             $params['langcode'] = trim($language);
         }
-
-        $records = $DB->get_records_sql("SELECT {$fields} FROM {$from} WHERE {$where}", $params);
+        $sql = "SELECT {$fields} FROM {$from} WHERE {$where}";
+        $records = $DB->get_records_sql($sql, $params);
         foreach($records as $record) {
 
             if (array_key_exists($record->language, $alllangs)) {

@@ -56,7 +56,7 @@ class search_form extends moodleform {
 
         $mform->addElement('html', '</div>');
 
-        $fieldoptions = ['' => get_string('choose')];
+        $fieldoptions = [];
         $modcustomfieldhandler = mod_handler::create();
         foreach ($modcustomfieldhandler->get_categories_with_fields() as $categorycontoller) {
             if ($categorycontoller->get('name') === get_string('lessonbankcatname', 'local_lessonbank')) {
@@ -70,9 +70,11 @@ class search_form extends moodleform {
                 }
             }
         }
-
+        $fieldoptions = array_filter($fieldoptions, function($value) {
+            return $value !== '';
+        });
         $mform->addElement('html', '<div class="collapse w-100" id="advancesearch">');
-        $mform->addElement('select', 'level', get_string('level', 'local_lessonbank'), $fieldoptions);
+        $mform->addElement('autocomplete', 'level', get_string('level', 'local_lessonbank'), $fieldoptions, 'multiple');
         $mform->setType('level', PARAM_INT);
         $mform->addElement('html', '</div>');
 

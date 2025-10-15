@@ -34,7 +34,7 @@ export const registerFilter = () => {
     const searchFilter = form => {
         const args = {
             language: '',
-            level: '',
+            level: [],
             keywords: ''
         };
         if (form.elements.language) {
@@ -43,14 +43,15 @@ export const registerFilter = () => {
         if (form.elements.search) {
             args.keywords = form.elements.search.value;
         }
-        if (form.elements.level && form.elements.level.offsetParent) {
-            args.level = form.elements.level.value;
+        if (form.elements['level[]']) {
+            const selectedOptions = form.elements['level[]'].selectedOptions;
+            args.level = Array.from(selectedOptions).map(option => option.value);
         }
 
         Ajax.call([{
             methodname: `${component}_list_minilessons`,
             args
-        }])[0]
+        }], true, false)[0]
         .then(items => {
             Log.debug(items);
             Templates.render(`${component}/lessonbankitems`, {items})
@@ -80,7 +81,7 @@ export const registerFilter = () => {
             args: {
                 id: Number(downloadbtn.dataset.id)
             }
-        }])[0]
+        }], true, false)[0]
         .then(data => {
             promise.resolve();
             const blob = new Blob([data.json], { type: 'application/json' });
