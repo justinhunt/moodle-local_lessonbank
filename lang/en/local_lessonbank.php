@@ -19,13 +19,16 @@
  *
  * @package    local_lessonbank
  * @category   string
- * @copyright  2025 YOUR NAME <your@email.com>
+ * @copyright  2025 Justin Hunt (poodllsupport@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['descriptioncolon'] = 'Description:';
 $string['items'] = 'Items';
+$string['itemscolon'] = 'Items:';
+$string['keywordcolon'] = 'Keyword:';
 $string['keywords'] = 'Keywords';
 $string['lessonbank'] = 'Lesson bank';
 $string['lessonbankcatname'] = 'Lesson bank';

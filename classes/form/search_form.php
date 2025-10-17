@@ -16,7 +16,7 @@
 
 namespace local_lessonbank\form;
 
-use local_modcustomfields\customfield\mod_handler;
+use local_lessonbank\external\fetch_langlevels;
 use mod_minilesson\utils;
 use moodleform;
 
@@ -26,7 +26,7 @@ require_once($CFG->libdir . '/formslib.php');
  * Class search_form
  *
  * @package    local_lessonbank
- * @copyright  2025 YOUR NAME <your@email.com>
+ * @copyright  2025 Justin Hunt (poodllsupport@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class search_form extends moodleform {
@@ -56,23 +56,8 @@ class search_form extends moodleform {
 
         $mform->addElement('html', '</div>');
 
-        $fieldoptions = [];
-        $modcustomfieldhandler = mod_handler::create();
-        foreach ($modcustomfieldhandler->get_categories_with_fields() as $categorycontoller) {
-            if ($categorycontoller->get('name') === get_string('lessonbankcatname', 'local_lessonbank')) {
-                foreach ($categorycontoller->get_fields() as $field) {
-                    $fieldshortname = $field->get('shortname');
-                    if ($fieldshortname === 'languagelevel') {
-                        if ($field->get('type') === 'select') {
-                            $fieldoptions += $field->get_options();
-                        }
-                    }
-                }
-            }
-        }
-        $fieldoptions = array_filter($fieldoptions, function($value) {
-            return $value !== '';
-        });
+        $fieldoptions = fetch_langlevels::execute();
+        $fieldoptions = array_column($fieldoptions, 'text', 'value');
         $mform->addElement('html', '<div class="collapse w-100" id="advancesearch">');
         $mform->addElement('autocomplete', 'level', get_string('level', 'local_lessonbank'), $fieldoptions, 'multiple');
         $mform->setType('level', PARAM_INT);

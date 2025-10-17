@@ -18,7 +18,7 @@
  * TODO describe file index
  *
  * @package    local_lessonbank
- * @copyright  2025 YOUR NAME <your@email.com>
+ * @copyright  2025 Justin Hunt (poodllsupport@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -50,7 +50,7 @@ echo html_writer::div(
         ['visible' => true]
     ),
     'position-relative',
-    ['data-region' => 'cards-container', 'style' => 'min-height: 100px']
+    ['data-region' => 'cards-container']
 );
 
 echo html_writer::end_div();

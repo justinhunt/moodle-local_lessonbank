@@ -18,7 +18,7 @@
  * Version information for Lessonbank
  *
  * @package    local_lessonbank
- * @copyright  2025 YOUR NAME <your@email.com>
+ * @copyright  2025 Justin Hunt (poodllsupport@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -26,7 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->component    = 'local_lessonbank';
 $plugin->release      = '1.0';
-$plugin->version      = 2025100600.03;
+$plugin->version      = 2025100600.04;
 $plugin->requires     = 2025092600.00;
 $plugin->supported    = [501, 501];
 $plugin->maturity     = MATURITY_STABLE;
