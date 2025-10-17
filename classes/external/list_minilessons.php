@@ -35,19 +35,24 @@ use stdClass;
  * @copyright  2025 YOUR NAME <your@email.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class list_minilessons extends external_api {
+class list_minilessons extends external_api
+{
 
     /**
      * Describes the parameters for local_lessonbank_list_minilessons
      *
      * @return external_function_parameters
      */
-    public static function execute_parameters(): external_function_parameters {
+    public static function execute_parameters(): external_function_parameters
+    {
         return new external_function_parameters([
             'language' => new external_value(PARAM_RAW, 'Language', VALUE_DEFAULT),
             'level' => new external_multiple_structure(
                 new external_value(PARAM_RAW, 'level', VALUE_DEFAULT),
-            'Level', VALUE_DEFAULT, []),
+                'Level',
+                VALUE_DEFAULT,
+                []
+            ),
             'keywords' => new external_value(PARAM_RAW, 'Key words', VALUE_DEFAULT),
         ]);
     }
@@ -59,7 +64,8 @@ class list_minilessons extends external_api {
      * @param string $level
      * @param string $keywords
      */
-    public static function execute($language, $level, $keywords) {
+    public static function execute($language, $level, $keywords)
+    {
         global $DB;
         // Parameter validation.
         [
@@ -67,13 +73,13 @@ class list_minilessons extends external_api {
             'level' => $levels,
             'keywords' => $keywords,
         ] = self::validate_parameters(
-            self::execute_parameters(),
-            [
-                'language' => $language,
-                'level' => $level,
-                'keywords' => $keywords,
-            ]
-        );
+                    self::execute_parameters(),
+                    [
+                        'language' => $language,
+                        'level' => $level,
+                        'keywords' => $keywords,
+                    ]
+                );
 
         $params['moduleid'] = $DB->get_field('modules', 'id', ['name' => 'minilesson']);
         $params['ctxlevel'] = CONTEXT_MODULE;
@@ -95,14 +101,14 @@ class list_minilessons extends external_api {
             3 => 'languagelevel',
             4 => 'skills',
             5 => 'keywords',
-            6 => 'keyvocabulary'
+            6 => 'keyvocabulary',
         ];
         $allfields = array_fill_keys($allfieldshorts, null);
         $alllangs = utils::get_lang_options();
 
-        foreach($modcustomfieldhandler->get_categories_with_fields() as $categorycontoller) {
+        foreach ($modcustomfieldhandler->get_categories_with_fields() as $categorycontoller) {
             if ($categorycontoller->get('name') === get_string('lessonbankcatname', 'local_lessonbank')) {
-                foreach($categorycontoller->get_fields() as $field) {
+                foreach ($categorycontoller->get_fields() as $field) {
                     $i = $field->get('id');
                     $fieldshortname = $field->get('shortname');
                     if (in_array($fieldshortname, $allfieldshorts)) {
@@ -117,7 +123,7 @@ class list_minilessons extends external_api {
                         $dbfield = $customdatasql = "{$customdatatablealias}.{$datafield}";
 
                         // Numeric column (non-text) should coalesce with default, for aggregation.
-                        $columntype = match($field->get('type')) {
+                        $columntype = match ($field->get('type')) {
                             'checkbox' => column::TYPE_BOOLEAN,
                             'date' => column::TYPE_TIMESTAMP,
                             'select' => column::TYPE_TEXT,
@@ -152,7 +158,7 @@ class list_minilessons extends external_api {
                                     if (!is_numeric($level) && in_array($level, $fieldoptions)) {
                                         $levelvalues[] = array_search($level, $fieldoptions);
                                     } else {
-                                        $levelvalues[] =  $level;
+                                        $levelvalues[] = $level;
                                     }
                                 }
                             }
@@ -172,7 +178,7 @@ class list_minilessons extends external_api {
                             if (!empty($keywords)) {
                                 $keywords = array_filter(explode(' ', $keywords), 'trim');
                             }
-                            foreach($keywords as $j => $keyword) {
+                            foreach ($keywords as $j => $keyword) {
                                 $ors[] = $DB->sql_like($dbfield, ':keyword' . $j, false);
                                 $params['keyword' . $j] = "%{$keyword}%";
                             }
@@ -191,15 +197,15 @@ class list_minilessons extends external_api {
         }
         $sql = "SELECT {$fields} FROM {$from} WHERE {$where}";
         $records = $DB->get_records_sql($sql, $params);
-        foreach($records as $record) {
+        foreach ($records as $record) {
 
             if (array_key_exists($record->language, $alllangs)) {
                 $record->language = $alllangs[$record->language];
             }
 
-            foreach($allfields as $fieldshort => $fieldobj) {
+            foreach ($allfields as $fieldshort => $fieldobj) {
                 $row = new stdClass();
-                foreach($record as $key => $value) {
+                foreach ($record as $key => $value) {
                     if (str_starts_with($key, $fieldshort)) {
                         $row->{substr($key, strlen($fieldshort))} = $value;
                         unset($record->$key);
@@ -232,7 +238,23 @@ class list_minilessons extends external_api {
             }
         }
 
-        return $records;
+        // Ensure that we always return something array like and that will satisfy our external structure.
+        $returnrecords = [];
+        if ($records && !empty($records)) {
+            foreach ($records as $record) {
+                $allfieldsexist = true;
+                foreach ($allfieldshorts as $key => $customfield) {
+                    if (!isset($record->{$customfield}) || empty($record->{$customfield})) {
+                        $allfieldsexist = false;
+                        break;
+                    }
+                }
+                if ($allfieldsexist) {
+                    $returnrecords[] = $record;
+                }
+            }
+        }
+        return $returnrecords;
     }
 
     /**
@@ -240,7 +262,8 @@ class list_minilessons extends external_api {
      *
      * @return external_multiple_structure
      */
-    public static function execute_returns(): external_multiple_structure {
+    public static function execute_returns(): external_multiple_structure
+    {
         $contentstructure = new external_single_structure([
             'id' => new external_value(PARAM_INT, 'id of minilesson'),
             'name' => new external_value(PARAM_TEXT, 'name of minilesson'),
@@ -256,11 +279,11 @@ class list_minilessons extends external_api {
             'itemtypes' => new external_multiple_structure(
                 new external_single_structure([
                     'text' => new external_value(PARAM_TEXT, 'item type'),
-                    'islast' => new external_value(PARAM_BOOL, 'last item or not', VALUE_DEFAULT, false)
+                    'islast' => new external_value(PARAM_BOOL, 'last item or not', VALUE_DEFAULT, false),
                 ]),
                 'all items used in minilesson',
                 VALUE_OPTIONAL
-            )
+            ),
         ]);
         return new external_multiple_structure($contentstructure);
     }
