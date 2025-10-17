@@ -21,7 +21,7 @@
  *
  * @package    local_lessonbank
  * @category   webservice
- * @copyright  2025 YOUR NAME <your@email.com>
+ * @copyright  2025 Justin Hunt (poodllsupport@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -40,6 +40,14 @@ $functions = [
     'local_lessonbank_fetch_minilesson' => [
         'classname' => local_lessonbank\external\fetch_minilesson::class,
         'description' => 'Fetch minilesson json',
+        'type' => 'read',
+        'ajax' => true,
+        'loginrequired' => false,
+    ],
+
+    'local_lessonbank_fetch_langlevels' => [
+        'classname' => local_lessonbank\external\fetch_langlevels::class,
+        'description' => 'Fetch minilesson language lessons',
         'type' => 'read',
         'ajax' => true,
         'loginrequired' => false,

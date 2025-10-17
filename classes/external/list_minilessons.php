@@ -32,11 +32,24 @@ use stdClass;
  * Implementation of web service local_lessonbank_list_minilessons
  *
  * @package    local_lessonbank
- * @copyright  2025 YOUR NAME <your@email.com>
+ * @copyright  2025 Justin Hunt (poodllsupport@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class list_minilessons extends external_api
 {
+
+    /**
+     * @var array
+     */
+    const CUSTOMFIELDS = [
+        0 => 'description',
+        1 => 'version',
+        2 => 'posterimage',
+        3 => 'languagelevel',
+        4 => 'skills',
+        5 => 'keywords',
+        6 => 'keyvocabulary'
+    ];
 
     /**
      * Describes the parameters for local_lessonbank_list_minilessons
@@ -94,15 +107,7 @@ class list_minilessons extends external_api
         $where = "cm.module = :moduleid AND cm.visible = 1";
 
         $modcustomfieldhandler = mod_handler::create();
-        $allfieldshorts = [
-            0 => 'description',
-            1 => 'version',
-            2 => 'posterimage',
-            3 => 'languagelevel',
-            4 => 'skills',
-            5 => 'keywords',
-            6 => 'keyvocabulary',
-        ];
+        $allfieldshorts = self::CUSTOMFIELDS;
         $allfields = array_fill_keys($allfieldshorts, null);
         $alllangs = utils::get_lang_options();
 
@@ -178,10 +183,14 @@ class list_minilessons extends external_api
                             if (!empty($keywords)) {
                                 $keywords = array_filter(explode(' ', $keywords), 'trim');
                             }
+                            $ors = [];
                             foreach ($keywords as $j => $keyword) {
                                 $ors[] = $DB->sql_like($dbfield, ':keyword' . $j, false);
                                 $params['keyword' . $j] = "%{$keyword}%";
                             }
+                            $j = isset($j) ? $j + 1: 0;
+                            $ors[] = $DB->sql_like('m.name', ':keyword' . $j, false);
+                            $params['keyword' . $j] = "%{$keyword}%";
                             if (!empty($ors)) {
                                 $where .= " AND (" . join(' OR ', $ors) . ")";
                             }
@@ -223,6 +232,11 @@ class list_minilessons extends external_api
             }
             $record->viewurl = new moodle_url('/mod/minilesson/view.php', ['id' => $record->cmid]);
             $record->viewurl = $record->viewurl->out(false);
+
+            $record->shortdesc = shorten_text(
+                $record->description, 150, false,
+                '<button type="button" data-action="showtext">' . get_string('more'). '</button>'
+            );
 
             if ($record->itemtypes) {
                 $record->itemtypes = array_map(
@@ -269,6 +283,7 @@ class list_minilessons extends external_api
             'name' => new external_value(PARAM_TEXT, 'name of minilesson'),
             'language' => new external_value(PARAM_TEXT, 'language of minilesson'),
             'description' => new external_value(PARAM_TEXT, 'description of minilesson'),
+            'shortdesc' => new external_value(PARAM_RAW, 'description of minilesson'),
             'version' => new external_value(PARAM_TEXT, 'version information of minilesson'),
             'posterimage' => new external_value(PARAM_URL, 'poster url of minilesson'),
             'languagelevel' => new external_value(PARAM_TEXT, 'language level of minilesson'),

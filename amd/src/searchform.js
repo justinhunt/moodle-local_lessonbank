@@ -17,7 +17,7 @@
  * TODO describe module searchform
  *
  * @module     local_lessonbank/searchform
- * @copyright  2025 YOUR NAME <your@email.com>
+ * @copyright  2025 Justin Hunt (poodllsupport@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 import Ajax from 'core/ajax';
@@ -72,29 +72,37 @@ export const registerFilter = () => {
         }
         e.preventDefault();
         const downloadbtn = e.target.closest('[data-action="download"]');
-        if (!downloadbtn.dataset.id) {
-            return;
-        }
-        const promise = loading.addIconToContainerWithPromise(downloadbtn);
-        Ajax.call([{
-            methodname: `${component}_fetch_minilesson`,
-            args: {
-                id: Number(downloadbtn.dataset.id)
+        if (downloadbtn) {
+            if (!downloadbtn.dataset.id) {
+                return;
             }
-        }], true, false)[0]
-        .then(data => {
-            promise.resolve();
-            const blob = new Blob([data.json], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            e.target.href = url;
-            e.target.download = `${e.target.dataset.download}.json`;
-            e.target.click();
-            e.target.removeAttribute('href');
-            URL.revokeObjectURL(url);
-        }).catch(e => {
-            promise.reject();
-            Notification.exception(e);
-        });
+            const promise = loading.addIconToContainerWithPromise(downloadbtn);
+            Ajax.call([{
+                methodname: `${component}_fetch_minilesson`,
+                args: {
+                    id: Number(downloadbtn.dataset.id)
+                }
+            }], true, false)[0]
+            .then(data => {
+                promise.resolve();
+                const blob = new Blob([data.json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                e.target.href = url;
+                e.target.download = `${e.target.dataset.download}.json`;
+                e.target.click();
+                e.target.removeAttribute('href');
+                URL.revokeObjectURL(url);
+            }).catch(e => {
+                promise.reject();
+                Notification.exception(e);
+            });
+        }
+        const showtextbtn = e.target.closest('[data-action="showtext"]');
+        if (showtextbtn) {
+            const wrapper = showtextbtn.parentElement;
+            const titlehtml = wrapper.firstElementChild.cloneNode(true).outerHTML;
+            wrapper.innerHTML = titlehtml + wrapper.dataset.text;
+        }
     });
     if (form) {
         searchFilter(form);

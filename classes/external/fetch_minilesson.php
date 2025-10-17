@@ -27,7 +27,7 @@ use mod_minilesson\import;
  * Implementation of web service local_lessonbank_fetch_minilesson
  *
  * @package    local_lessonbank
- * @copyright  2025 YOUR NAME <your@email.com>
+ * @copyright  2025 Justin Hunt (poodllsupport@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class fetch_minilesson extends external_api {

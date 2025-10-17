@@ -23,35 +23,35 @@
     {
     }
 }}
-<div class="itemcontainer">
-    <h3 class="itemname">{{name}}</h3>
-    <div class="row">
-        <div class="col-md-4">
+<div class="col-md-6" data-region="itemcard">
+    <div class="itemcontainer row">
+        <div class="col-md-4 d-flex flex-column" data-region="image">
             <img src="{{posterimage}}" alt="{{name}}" class="searchimg img-responsive">
         </div>
-        <div class="col-md-8">
+        <div class="col-md-8 d-flex flex-column">
+            <h3 class="itemname mb-1">{{name}}</h3>
             <div class="d-flex">
                 <p>{{language}}</p>
                 <p class="ml-2">{{languagelevel}}</p>
             </div>
             <div class="d-flex">
-                <p><b>{{#str}}keywords, local_lessonbank{{/str}}</b></p>
-                <p class="ml-2">{{keywords}}</p>
+                <p><b class="mr-2">{{#str}}keywordcolon, local_lessonbank{{/str}}</b>{{keywords}}</p>
             </div>
-            <div>
-                <p><b>{{#str}}description{{/str}}</b></p>
-                <p>{{description}}</p>
+            <div class="d-flex flex-column">
+                <p data-text={{#quote}}{{{description}}}{{/quote}}>
+                    <b class="mr-2">{{#str}}descriptioncolon, local_lessonbank{{/str}}</b>
+                    {{{ shortdesc }}}
+                </p>
             </div>
             <div class="d-flex">
-                <p><b>{{#str}}items, local_lessonbank{{/str}}</b></p>
-                <p class="minilesson_items ml-2">
-                    {{#itemtypes}}
-                        {{{text}}}{{^islast}},{{/islast}}
-                    {{/itemtypes}}
-                </p>
+                <p><b class="mr-2">{{#str}}itemscolon, local_lessonbank{{/str}}</b>{{#itemtypes}}{{{text}}}{{^islast}},{{/islast}}{{/itemtypes}}</p>
+            </div>
+            <div class="d-flex mt-auto">
+                <a href="{{viewurl}}" class="btn btn-primary text-white rounded ml-auto"> {{#str}}preview{{/str}}</a>
+                <a data-id="{{id}}" data-action="download" data-download="{{name}}" class="btn btn-primary text-white rounded ml-1">
+                    {{#str}}download{{/str}}
+                </a>
             </div>
         </div>
     </div>
-    <a href="{{viewurl}}" class="btn btn-primary mt-2 mb-2"> {{#str}}preview{{/str}}</a>
-    <a data-id="{{id}}" data-action="download" data-download="{{name}}" class="btn btn-primary mt-2 mb-2"> {{#str}}download{{/str}}</a>
 </div>
