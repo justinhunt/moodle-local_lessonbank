@@ -152,6 +152,9 @@ class list_minilessons extends external_api
 
 
                         $dbfield = $customdatasql = "{$customdatatablealias}.{$datafield}";
+                        if ($fieldshortname === 'description') {
+                            $where .= " AND COALESCE({$dbfield}, '') <> ''";
+                        }
 
                         // Numeric column (non-text) should coalesce with default, for aggregation.
                         $columntype = match ($field->get('type')) {
