@@ -79,6 +79,12 @@ class list_minilessons extends external_api
                 VALUE_DEFAULT,
                 []
             ),
+            'itemtypes' => new external_multiple_structure(
+                new external_value(PARAM_ALPHANUMEXT, 'itemtype', VALUE_DEFAULT),
+                'Item types',
+                VALUE_DEFAULT,
+                []
+            ),
             'keywords' => new external_value(PARAM_RAW, 'Key words', VALUE_DEFAULT),
             'page' => new external_value(PARAM_INT, 'Page number', VALUE_DEFAULT, 1),
             'perpage' => new external_value(PARAM_INT, 'Perpage count', VALUE_DEFAULT, 10),
@@ -94,7 +100,7 @@ class list_minilessons extends external_api
      * @param int $page
      * @param int $perpage
      */
-    public static function execute($language, $level, $skill, $topic, $keywords, $page, $perpage)
+    public static function execute($language, $level, $skill, $topic, $itemtypes, $keywords, $page, $perpage)
     {
         global $DB;
         // Parameter validation.
@@ -103,6 +109,7 @@ class list_minilessons extends external_api
             'level' => $levels,
             'skill' => $skills,
             'topic' => $topics,
+            'itemtypes' => $itemtypes,
             'keywords' => $keywords,
             'page' => $page,
             'perpage' => $perpage
@@ -113,6 +120,7 @@ class list_minilessons extends external_api
                         'level' => $level,
                         'skill' => $skill,
                         'topic' => $topic,
+                        'itemtypes' => $itemtypes,
                         'keywords' => $keywords,
                         'page' => $page,
                         'perpage' => $perpage
@@ -282,6 +290,13 @@ class list_minilessons extends external_api
         if (!empty($language)) {
             $where .= " AND {$DB->sql_like('m.ttslanguage', ':langcode')} ";
             $params['langcode'] = trim($language);
+        }
+
+        if (!empty($itemtypes)) {
+            foreach ($itemtypes as $i => $type) {
+                $where .= " AND EXISTS (SELECT 1 FROM {minilesson_rsquestions} rsq{$i} WHERE rsq{$i}.minilesson = m.id AND rsq{$i}.type = :itemtype{$i})";
+                $params["itemtype{$i}"] = $type;
+            }
         }
         $sql = "SELECT {$fields} FROM {$from} WHERE {$where}";
         $limitfrom = ($page > 1) ? ($page - 1) * $perpage : 0;
