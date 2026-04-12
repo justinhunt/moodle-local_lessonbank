@@ -47,7 +47,15 @@ $functions = [
 
     'local_lessonbank_fetch_langlevels' => [
         'classname' => local_lessonbank\external\fetch_langlevels::class,
-        'description' => 'Fetch minilesson language lessons',
+        'description' => 'Fetch lesson bank language levels',
+        'type' => 'read',
+        'ajax' => true,
+        'loginrequired' => false,
+    ],
+
+    'local_lessonbank_fetch_customfield_options' => [
+        'classname' => local_lessonbank\external\fetch_customfield_options::class,
+        'description' => 'Fetch lesson bank custom field options',
         'type' => 'read',
         'ajax' => true,
         'loginrequired' => false,

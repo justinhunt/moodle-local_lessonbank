@@ -48,7 +48,8 @@ class list_minilessons extends external_api
         3 => 'languagelevel',
         4 => 'skills',
         5 => 'keywords',
-        6 => 'keyvocabulary'
+        6 => 'keyvocabulary',
+        7 => 'topic'
     ];
 
     /**
