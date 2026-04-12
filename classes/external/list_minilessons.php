@@ -150,7 +150,6 @@ class list_minilessons extends external_api
                         $datacontroller = data_controller::create(0, null, $field);
                         $datafield = $datacontroller->datafield();
 
-                        $where .= " AND COALESCE({$customdatatablealias}.value, '') <> ''";
 
                         $dbfield = $customdatasql = "{$customdatatablealias}.{$datafield}";
 
@@ -182,7 +181,7 @@ class list_minilessons extends external_api
                         }
 
                         // Filters
-                        if ($fieldshortname === $allfieldshorts[3]) {
+                        if ($fieldshortname === 'languagelevel') {
                             $levelvalues = [];
                             if (!empty($levels) && $field->get('type') === 'select') {
                                 $fieldoptions = $field->get_options();
@@ -206,12 +205,12 @@ class list_minilessons extends external_api
                             }
                         }
 
-                        if ($fieldshortname === $allfieldshorts[4]) {
+                        if ($fieldshortname === 'skills') {
                             $skillvalues = [];
-                            if (!empty($skills) && $field->get('type') === 'select') {
-                                $fieldoptions = $field->get_options();
+                            if (!empty($skills)) {
+                                $fieldoptions = (method_exists($field, 'get_options')) ? $field->get_options() : [];
                                 foreach ($skills as $skill) {
-                                    if (!is_numeric($skill) && in_array($skill, $fieldoptions)) {
+                                    if (!is_numeric($skill) && !empty($fieldoptions) && in_array($skill, $fieldoptions)) {
                                         $skillvalues[] = array_search($skill, $fieldoptions);
                                     } else {
                                         $skillvalues[] = $skill;
@@ -230,12 +229,12 @@ class list_minilessons extends external_api
                             }
                         }
 
-                        if ($fieldshortname === $allfieldshorts[7]) {
+                        if ($fieldshortname === 'topic') {
                             $topicvalues = [];
-                            if (!empty($topics) && $field->get('type') === 'select') {
-                                $fieldoptions = $field->get_options();
+                            if (!empty($topics)) {
+                                $fieldoptions = (method_exists($field, 'get_options')) ? $field->get_options() : [];
                                 foreach ($topics as $topic) {
-                                    if (!is_numeric($topic) && in_array($topic, $fieldoptions)) {
+                                    if (!is_numeric($topic) && !empty($fieldoptions) && in_array($topic, $fieldoptions)) {
                                         $topicvalues[] = array_search($topic, $fieldoptions);
                                     } else {
                                         $topicvalues[] = $topic;
@@ -254,20 +253,22 @@ class list_minilessons extends external_api
                             }
                         }
 
-                        if ($fieldshortname === $allfieldshorts[5]) {
+                        if ($fieldshortname === 'keywords') {
                             if (!empty($keywords)) {
-                                $keywords = array_filter(explode(' ', $keywords), 'trim');
-                            }
-                            $ors = [];
-                            foreach ($keywords as $j => $keyword) {
-                                $ors[] = $DB->sql_like($dbfield, ':keyword' . $j, false);
-                                $params['keyword' . $j] = "%{$keyword}%";
-                            }
-                            $j = isset($j) ? $j + 1: 0;
-                            $ors[] = $DB->sql_like('m.name', ':keyword' . $j, false);
-                            $params['keyword' . $j] = "%{$keyword}%";
-                            if (!empty($ors)) {
-                                $where .= " AND (" . join(' OR ', $ors) . ")";
+                                $keywordsarr = array_filter(explode(' ', $keywords), 'trim');
+                                if (!empty($keywordsarr)) {
+                                    $ors = [];
+                                    foreach ($keywordsarr as $j => $keyword) {
+                                        $ors[] = $DB->sql_like($dbfield, ':keyword' . $j, false);
+                                        $params['keyword' . $j] = "%{$keyword}%";
+                                    }
+                                    $j = isset($j) ? $j + 1 : 0;
+                                    $ors[] = $DB->sql_like('m.name', ':namepath' . $j, false);
+                                    $params['namepath' . $j] = "%{$keywords}%";
+                                    if (!empty($ors)) {
+                                        $where .= " AND (" . join(' OR ', $ors) . ")";
+                                    }
+                                }
                             }
                         }
                     }
