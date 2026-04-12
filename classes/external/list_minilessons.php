@@ -67,6 +67,18 @@ class list_minilessons extends external_api
                 VALUE_DEFAULT,
                 []
             ),
+            'skill' => new external_multiple_structure(
+                new external_value(PARAM_RAW, 'skill', VALUE_DEFAULT),
+                'Skill',
+                VALUE_DEFAULT,
+                []
+            ),
+            'topic' => new external_multiple_structure(
+                new external_value(PARAM_RAW, 'topic', VALUE_DEFAULT),
+                'Topic',
+                VALUE_DEFAULT,
+                []
+            ),
             'keywords' => new external_value(PARAM_RAW, 'Key words', VALUE_DEFAULT),
             'page' => new external_value(PARAM_INT, 'Page number', VALUE_DEFAULT, 1),
             'perpage' => new external_value(PARAM_INT, 'Perpage count', VALUE_DEFAULT, 10),
@@ -82,13 +94,15 @@ class list_minilessons extends external_api
      * @param int $page
      * @param int $perpage
      */
-    public static function execute($language, $level, $keywords, $page, $perpage)
+    public static function execute($language, $level, $skill, $topic, $keywords, $page, $perpage)
     {
         global $DB;
         // Parameter validation.
         [
             'language' => $language,
             'level' => $levels,
+            'skill' => $skills,
+            'topic' => $topics,
             'keywords' => $keywords,
             'page' => $page,
             'perpage' => $perpage
@@ -97,6 +111,8 @@ class list_minilessons extends external_api
                     [
                         'language' => $language,
                         'level' => $level,
+                        'skill' => $skill,
+                        'topic' => $topic,
                         'keywords' => $keywords,
                         'page' => $page,
                         'perpage' => $perpage
@@ -186,6 +202,54 @@ class list_minilessons extends external_api
                                     $params["langlevel{$key}"] = $level;
                                 }
                                 $where .= join(' OR ', $levelors);
+                                $where .= ")";
+                            }
+                        }
+
+                        if ($fieldshortname === $allfieldshorts[4]) {
+                            $skillvalues = [];
+                            if (!empty($skills) && $field->get('type') === 'select') {
+                                $fieldoptions = $field->get_options();
+                                foreach ($skills as $skill) {
+                                    if (!is_numeric($skill) && in_array($skill, $fieldoptions)) {
+                                        $skillvalues[] = array_search($skill, $fieldoptions);
+                                    } else {
+                                        $skillvalues[] = $skill;
+                                    }
+                                }
+                            }
+                            if (!empty($skillvalues)) {
+                                $where .= " AND (";
+                                $skillors = [];
+                                foreach ($skillvalues as $key => $skill) {
+                                    $skillors[] = "{$dbfield} = :langskill{$key}";
+                                    $params["langskill{$key}"] = $skill;
+                                }
+                                $where .= join(' OR ', $skillors);
+                                $where .= ")";
+                            }
+                        }
+
+                        if ($fieldshortname === $allfieldshorts[7]) {
+                            $topicvalues = [];
+                            if (!empty($topics) && $field->get('type') === 'select') {
+                                $fieldoptions = $field->get_options();
+                                foreach ($topics as $topic) {
+                                    if (!is_numeric($topic) && in_array($topic, $fieldoptions)) {
+                                        $topicvalues[] = array_search($topic, $fieldoptions);
+                                    } else {
+                                        $topicvalues[] = $topic;
+                                    }
+                                }
+                            }
+                            if (!empty($topicvalues)) {
+                                $where .= " AND (";
+                                $topicors = [];
+                                foreach ($topicvalues as $key => $topic) {
+                                    $topicors[] = "{$dbfield} = :langtopic{$key}";
+                                    $params["langtopic{$key}"] = $topic;
+                                }
+                                $where .= join(' OR ', $topicors);
                                 $where .= ")";
                             }
                         }
