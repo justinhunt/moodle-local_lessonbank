@@ -26,6 +26,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['descriptioncolon'] = 'Description:';
+$string['embedcookie'] = 'Allow lesson previews in an iframe';
+$string['embedcookie_desc'] = 'Re-issue the session cookie as SameSite=None; Secure; Partitioned when a page is requested from another site, so that a lesson previewed in an iframe on a remote Moodle keeps its session instead of being redirected to the login page. The cookie is partitioned by the embedding site, so each preview gets its own guest session and a first party session here is never shared cross site. Safari blocks third party cookies, so previews may still not work there.';
 $string['foundlessons'] = 'Found {$a} lessons';
 $string['items'] = 'Items';
 $string['itemscolon'] = 'Items:';

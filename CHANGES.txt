@@ -1,3 +1,14 @@
+Version 2026083100.01
+- Fixed lesson previews being redirected to the login page when embedded in an iframe on a remote
+  Moodle site. Core issues the session cookie as SameSite=Lax, which a browser will not send for a
+  document inside a cross site iframe, so the preview rendered as a guest and then died on its
+  first web service call with "servicerequireslogin" - which lib/amd/src/ajax.js turns into a
+  navigation to /login/index.php. A new after_config hook callback re-issues the session cookie as
+  "SameSite=None; Secure; Partitioned" for requests made in a third party context. First party
+  browsing of the lesson bank is untouched. Controlled by the new "Allow lesson previews in an
+  iframe" setting (on by default), and requires https. Note Safari blocks third party cookies, so
+  previews there may still fail.
+
 Version 2026083100.00
 - Fixed local_lessonbank_list_minilessons failing with "Invalid response value detected" whenever
   the listing included a minilesson whose settings form had never been saved. Custom field values
