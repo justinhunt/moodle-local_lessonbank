@@ -53,6 +53,19 @@ class list_minilessons extends external_api
     ];
 
     /**
+     * Custom fields a minilesson must have a value for before it is listed in the lesson bank.
+     *
+     * A lesson missing one of these is not tagged well enough to be worth offering. Note that
+     * fields with a configured default do not belong here: never saving the settings form leaves
+     * no stored row, but the author was shown the default and it is what gets exported.
+     *
+     * @var array
+     */
+    const REQUIREDFIELDS = [
+        'description',
+    ];
+
+    /**
      * Describes the parameters for local_lessonbank_list_minilessons
      *
      * @return external_function_parameters
@@ -89,6 +102,46 @@ class list_minilessons extends external_api
             'page' => new external_value(PARAM_INT, 'Page number', VALUE_DEFAULT, 1),
             'perpage' => new external_value(PARAM_INT, 'Perpage count', VALUE_DEFAULT, 10),
         ]);
+    }
+
+    /**
+     * Build the WHERE fragment matching a custom field against any one of the selected options.
+     *
+     * A multiselect field stores its selection as a comma separated list of option indexes
+     * ("1,3,5"), so testing the stored value for equality only ever matches lessons tagged with
+     * that single option - a lesson tagged Reading and Writing is found by neither. Match against
+     * the list for those, and keep the plain equality test for single valued fields.
+     *
+     * @param \core_customfield\field_controller $field the custom field being filtered on
+     * @param string $dbfield SQL expression holding the stored value
+     * @param array $values the option values to match, any one of which is a hit
+     * @param string $paramprefix prefix for the bound parameters this generates
+     * @param array $params bound parameters, added to
+     * @return string the WHERE fragment, or an empty string when there is nothing to filter on
+     */
+    protected static function option_filter_sql($field, $dbfield, array $values, $paramprefix, array &$params): string {
+        global $DB;
+
+        if (empty($values)) {
+            return '';
+        }
+
+        $ismultiselect = $field->get('type') === 'multiselect';
+        $listfield = $ismultiselect ? $DB->sql_concat("','", "COALESCE({$dbfield}, '')", "','") : '';
+
+        $ors = [];
+        foreach ($values as $key => $value) {
+            $paramname = $paramprefix . $key;
+            if ($ismultiselect) {
+                $ors[] = $DB->sql_like($listfield, ":{$paramname}", false);
+                $params[$paramname] = '%,' . $DB->sql_like_escape($value) . ',%';
+            } else {
+                $ors[] = "{$dbfield} = :{$paramname}";
+                $params[$paramname] = $value;
+            }
+        }
+
+        return ' AND (' . join(' OR ', $ors) . ')';
     }
 
     /**
@@ -160,8 +213,13 @@ class list_minilessons extends external_api
 
 
                         $dbfield = $customdatasql = "{$customdatatablealias}.{$datafield}";
-                        if ($fieldshortname === 'description') {
-                            $where .= " AND COALESCE({$dbfield}, '') <> ''";
+                        if (in_array($fieldshortname, self::REQUIREDFIELDS)) {
+                            // Numeric columns cannot be compared against '' on every database, so guard by type.
+                            if (in_array($datafield, ['intvalue', 'decvalue'])) {
+                                $where .= " AND COALESCE({$dbfield}, 0) <> 0";
+                            } else {
+                                $where .= " AND COALESCE({$dbfield}, '') <> ''";
+                            }
                         }
 
                         // Numeric column (non-text) should coalesce with default, for aggregation.
@@ -204,16 +262,7 @@ class list_minilessons extends external_api
                                     }
                                 }
                             }
-                            if (!empty($levelvalues)) {
-                                $where .= " AND (";
-                                $levelors = [];
-                                foreach ($levelvalues as $key => $level) {
-                                    $levelors[] = "{$dbfield} = :langlevel{$key}";
-                                    $params["langlevel{$key}"] = $level;
-                                }
-                                $where .= join(' OR ', $levelors);
-                                $where .= ")";
-                            }
+                            $where .= self::option_filter_sql($field, $dbfield, $levelvalues, 'langlevel', $params);
                         }
 
                         if ($fieldshortname === 'skills') {
@@ -228,16 +277,7 @@ class list_minilessons extends external_api
                                     }
                                 }
                             }
-                            if (!empty($skillvalues)) {
-                                $where .= " AND (";
-                                $skillors = [];
-                                foreach ($skillvalues as $key => $skill) {
-                                    $skillors[] = "{$dbfield} = :langskill{$key}";
-                                    $params["langskill{$key}"] = $skill;
-                                }
-                                $where .= join(' OR ', $skillors);
-                                $where .= ")";
-                            }
+                            $where .= self::option_filter_sql($field, $dbfield, $skillvalues, 'langskill', $params);
                         }
 
                         if ($fieldshortname === 'topic') {
@@ -252,16 +292,7 @@ class list_minilessons extends external_api
                                     }
                                 }
                             }
-                            if (!empty($topicvalues)) {
-                                $where .= " AND (";
-                                $topicors = [];
-                                foreach ($topicvalues as $key => $topic) {
-                                    $topicors[] = "{$dbfield} = :langtopic{$key}";
-                                    $params["langtopic{$key}"] = $topic;
-                                }
-                                $where .= join(' OR ', $topicors);
-                                $where .= ")";
-                            }
+                            $where .= self::option_filter_sql($field, $dbfield, $topicvalues, 'langtopic', $params);
                         }
 
                         if ($fieldshortname === 'keywords') {
@@ -326,9 +357,18 @@ class list_minilessons extends external_api
                         unset($record->$key);
                     }
                 }
-                if (!empty($row->id)) {
+                if (!empty($fieldobj)) {
+                    // Build the controller even when the join found no row. An author who opened the
+                    // settings form and closed it without saving stored nothing, and the controller
+                    // then falls back to the field's configured default - which is exactly what that
+                    // form showed them. Only testing $row->id here reported nothing at all instead.
                     $datacontroller = data_controller::create(0, $row, $fieldobj);
                     $record->{$fieldshort} = $datacontroller->export_value();
+                }
+                // Every custom field key is required in the return structure, so a field that is not
+                // set up on this site must still report something rather than break the whole response.
+                if (!isset($record->{$fieldshort})) {
+                    $record->{$fieldshort} = '';
                 }
                 if (!empty($record->{$fieldshort}) && $fieldshort === $allfieldshorts[2]) {
                     if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $record->{$fieldshort}, $m)) {

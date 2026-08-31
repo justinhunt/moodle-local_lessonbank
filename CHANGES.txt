@@ -1,2 +1,15 @@
+Version 2026083100.00
+- Fixed local_lessonbank_list_minilessons failing with "Invalid response value detected" whenever
+  the listing included a minilesson whose settings form had never been saved. Custom field values
+  were only read when a customfield_data row existed, so such a lesson left the required "skills"
+  key out of the response and took the whole web service call down with it. The field's data
+  controller is now always built, which falls back to the field's configured default - the value
+  the author was shown in the settings form.
+- A custom field that is not set up on the site at all now reports an empty string rather than
+  omitting the key, so no listing can be broken this way again.
+- Fixed the skill and topic filters. Those are multiselect fields, which store their selection as
+  a comma separated list of option indexes, so the old equality test only matched lessons tagged
+  with that single option - a lesson tagged "Listening, Speaking" was found by neither filter.
+
 Version 2026041200.01
 - Added new web service local_lessonbank_fetch_customfield_options
